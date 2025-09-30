@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Escolha a opção... entregar o óculos:</title>
+<style>
+  :root{
+    --bg:#8a5cf1;
+    --card:#151823;
+    --text:#e8eefc;
+    --muted:#9aa4b2;
+    --primary:#8a5cf9;
+    --accent:#35e4a9;
+    --danger:#ff5d73;
+    --shadow: 0 10px 40px rgba(0,0,0,.35);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 10% -10%, #1b2030 0%, transparent 60%),
+      radial-gradient(1000px 700px at 90% 110%, #1a2133 0%, transparent 60%),
+      var(--bg);
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+  }
+  .wrap{
+    width:min(920px, 92vw);
+    padding:32px;
+    border-radius:var(--radius);
+    background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow);
+    position:relative;
+    background-color: #fff;
+    color: black;
+  }
+  h1{
+    margin:0 0 12px;
+    font-size: clamp(22px, 2.6vw, 32px);
+    letter-spacing:.2px;
+  }
+  p.muted{
+    margin:0 0 26px;
+    color:var(--muted);
+    font-size:clamp(14px,1.6vw,16px);
+  }
+
+  .buttons{
+    position:relative;              /* âncora para o botão fujão */
+    min-height:260px;               /* dá espaço pro fujão correr */
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    flex-wrap:wrap;
+    padding:28px 8px 46px;
+    overflow:hidden;                /* impede escapar visualmente */
+  }
+
+  button{
+    border:0;
+    cursor:pointer;
+    padding:14px 18px;
+    border-radius:14px;
+    font-weight:700;
+    transition:transform .12s ease, box-shadow .2s ease, background .2s ease, opacity .2s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    will-change:transform;
+    white-space:nowrap;
+    touch-action: manipulation;     /* melhora toque mobile */
+  }
+
+  /* Botão bom (abre modal + corações) */
+  #btn-pessoalmente{
+    background: linear-gradient(135deg, var(--primary), #b282ff);
+    color:white;
+  }
+  #btn-pessoalmente:hover{ transform: translateY(-1px) scale(1.02); }
+  #btn-pessoalmente:active{ transform: translateY(1px) scale(.98); }
+
+  /* Botão que foge — ABSOLUTE dentro de .buttons */
+  #btn-fuja{
+    position:absolute;              /* move dentro do container */
+    z-index: 5;
+    background: black;
+    color:#fff;
+    border:1px solid (255,255,rgba255,.08);
+    left:50%;
+    top:60%;
+    transform:translate(-50%,-50%);
+    touch-action: none;             /* evita scroll ao “perseguir” no mobile */
+  }
+
+  /* Container dos corações */
+  .hearts{
+    pointer-events:none;
+    position:absolute;
+    inset:0;
+    overflow:visible;
+  }
+  .heart{
+    position:absolute;
+    font-size:18px;
+    user-select:none;
+    animation: floatUp 1200ms ease-out forwards, fadeOut 1200ms ease-out forwards;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  }
+  @keyframes floatUp{
+    0%{transform: translate(var(--x,0), var(--y,0)) scale(.9) rotate(0deg);}
+    60%{transform: translate(calc(var(--x,0) * .6), calc(var(--y,0) - 40px)) scale(1.1) rotate(8deg);}
+    100%{transform: translate(calc(var(--x,0)), calc(var(--y,0) - 110px)) scale(1) rotate(-6deg);}
+  }
+  @keyframes fadeOut{
+    0%{opacity:0}
+    10%{opacity:1}
+    100%{opacity:0}
+  }
+
+  /* Modal */
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(8,10,15,.55);
+    backdrop-filter: blur(6px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10;
+  }
+  .modal-backdrop.show{ display:flex; }
+  .modal{
+    width:min(95vw, 680px);
+    background: var(--card);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    animation: pop .18s ease-out;
+  }
+  @keyframes pop{
+    from{transform: translateY(6px) scale(.98); opacity:.6}
+    to{transform: translateY(0) scale(1); opacity:1}
+  }
+  .modal header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .modal header h2{
+    margin:0; font-size:16px; color:#dfe7ff; letter-spacing:.2px;
+  }
+  .modal header button{
+    background:transparent; color:#cfd7ee; padding:8px 10px; border-radius:10px; box-shadow:none; border:1px solid rgba(255,255,255,.08);
+  }
+  .modal header button:hover{ background:#20283a }
+  .modal .content{
+    padding:0; background:#0e121a;
+  }
+  .modal .content img{
+    display:block; width:100%; height:auto; object-fit:cover; max-height:min(80vh, 820px);
+  }
+  .modal footer{
+    padding:12px 16px; border-top:1px solid rgba(255,255,255,.08); color:var(--muted);
+  }
+
+  .foot{
+    margin-top:14px;
+    display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px;
+  }
+  .pill{
+    padding:6px 10px; border:1px solid rgba(255,255,255,.08); border-radius:999px; color:#cfe9ff22; background:#0c1019;
+  }
+
+  button:focus{ outline:2px solid #66a3ff; outline-offset:2px; }
+
+  /* Ajustes mobile: aumenta área pro botão correr */
+  @media (max-width: 520px){
+    .buttons{ min-height: 360px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap" aria-live="polite">
+    <h1>Escolha a opção... entregar o óculos para o Lucas:</h1>
+    <p class="muted">Seja sábia nas suas escolhas 😌</p>
+
+    <div class="buttons" id="buttons-area">
+      <button id="btn-pessoalmente" type="button">
+        Pessoalmente + Beijos da bonita 💋
+      </button>
+
+      <button id="btn-fuja" type="button" aria-label="Uber Flash (botão fujão)">
+        Uber Flash 🚗📦
+      </button>
+
+      <div class="hearts" id="hearts"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <header>
+        <h2 id="modal-title">Entrega Pessoalmente 😘</h2>
+        <button type="button" id="close-modal" aria-label="Fechar">Fechar ✕</button>
+      </header>
+      <div class="content">
+        <!-- Troque 'bonita.jpg' pela sua imagem (ou use base64) -->
+        <img src="bonita.jpg" alt="A bonita mandando beijos">
+      </div>
+      <footer>Pronto, combinado: pessoalmente e com muitos beijos da gata! 💜</footer>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const btnGood = document.getElementById('btn-pessoalmente');
+  const btnFuja = document.getElementById('btn-fuja');
+  const hearts = document.getElementById('hearts');
+  const area = document.getElementById('buttons-area'); // limite de fuga
+
+  const modal = document.getElementById('modal');
+  const closeModalBtn = document.getElementById('close-modal');
+
+  /* ---------- CORAÇÕES + MODAL ---------- */
+  function spawnHeart(x, y){
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.textContent = ['💜','💖','💘','💞','💗'][Math.floor(Math.random()*5)];
+    const dx = (Math.random() * 140) - 70;
+    const dy = (Math.random() * 20) - 10;
+    const rectA = area.getBoundingClientRect();
+    h.style.left = (x - rectA.left) + 'px';
+    h.style.top  = (y - rectA.top)  + 'px';
+    h.style.setProperty('--x', dx + 'px');
+    h.style.setProperty('--y', dy + 'px');
+    h.style.opacity = '0';
+    hearts.appendChild(h);
+    setTimeout(()=> h.remove(), 1300);
+  }
+
+  function burstHearts(centerEl, count=18){
+    const rect = centerEl.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top  + rect.height/2;
+    for(let i=0;i<count;i++){
+      setTimeout(()=> spawnHeart(cx, cy), i*30);
+    }
+  }
+
+  function openModal(){
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+    setTimeout(()=> closeModalBtn.focus(), 60);
+  }
+  function closeModal(){
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+  }
+
+  btnGood.addEventListener('click', ()=>{
+    burstHearts(btnGood, 22);
+    openModal();
+  });
+  closeModalBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+  window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && modal.classList.contains('show')) closeModal(); });
+
+ /* ---------- BOTÃO QUE FOGE (quina-safe, bounded + anti-clique) ---------- */
+const margin = 12;                 // colchão interno nas bordas do container
+const triggerEdge = 50;           // raio até a BORDA do botão para fugir
+const baseRun = 190;               // distância base da corrida
+const jitterMin = 60, jitterMax = 130;
+const edgeSafe = 18;               // “não grudar” na borda após clamp
+const minPointerGap = triggerEdge + 70; // distância mínima do dedo após fuga
+
+function clampToArea(x, y){
+  const a = area.getBoundingClientRect();
+  const w = btnFuja.offsetWidth, h = btnFuja.offsetHeight;
+  const maxX = a.width  - w - margin;
+  const maxY = a.height - h - margin;
+  return {
+    x: Math.max(margin, Math.min(maxX, x)),
+    y: Math.max(margin, Math.min(maxY, y))
+  };
+}
+
+function centerButton(){
+  btnFuja.style.transform = 'translate(0,0)';
+  const a = area.getBoundingClientRect();
+  const w = btnFuja.offsetWidth, h = btnFuja.offsetHeight;
+  const p = clampToArea((a.width - w)/2, (a.height - h)/2 + 30);
+  btnFuja.style.left = p.x + 'px';
+  btnFuja.style.top  = p.y + 'px';
+}
+
+// retângulo do botão relativo ao container
+function getBtnRectRel(){
+  const r = btnFuja.getBoundingClientRect();
+  const a = area.getBoundingClientRect();
+  return { left: r.left - a.left, top: r.top - a.top, width: r.width, height: r.height };
+}
+
+// distância do ponto às BORDAS do botão (0 se já em cima)
+function edgeDistance(mx, my, rect){
+  const rx1 = rect.left, rx2 = rect.left + rect.width;
+  const ry1 = rect.top,  ry2 = rect.top  + rect.height;
+  const dx = mx < rx1 ? (rx1 - mx) : (mx > rx2 ? (mx - rx2) : 0);
+  const dy = my < ry1 ? (ry1 - my) : (my > ry2 ? (my - ry2) : 0);
+  return Math.hypot(dx, dy);
+}
+
+// posição aleatória segura (longe do dedo e das bordas)
+function randomSafePos(mx, my){
+  const a = area.getBoundingClientRect();
+  const w = btnFuja.offsetWidth, h = btnFuja.offsetHeight;
+  const maxX = a.width  - w - margin;
+  const maxY = a.height - h - margin;
+  for(let i=0;i<20;i++){
+    const x = margin + Math.random() * (maxX - margin);
+    const y = margin + Math.random() * (maxY - margin);
+    const cx = x + w/2, cy = y + h/2;
+    const distP = Math.hypot(cx - mx, cy - my);
+    const minEdge = Math.min(x - margin, y - margin, (a.width - (x + w)) - margin, (a.height - (y + h)) - margin);
+    if(distP > minPointerGap && minEdge > edgeSafe) return {x,y};
+  }
+  // fallback: centro
+  return clampToArea((a.width - w)/2, (a.height - h)/2);
+}
+
+// escolhe melhor direção entre vários ângulos
+function bestEscape(mx, my){
+  const a = area.getBoundingClientRect();
+  const r = btnFuja.getBoundingClientRect();
+  const w = r.width, h = r.height;
+  const cx = r.left - a.left + w/2;
+  const cy = r.top  - a.top  + h/2;
+
+  // vetor base “para longe do dedo”
+  let dx = cx - mx, dy = cy - my;
+  let baseAngle = Math.atan2(dy, dx);
+  const run = baseRun + (jitterMin + Math.random()*(jitterMax - jitterMin));
+
+  // ângulos candidatos (afasta e também tenta “escapar pela lateral”)
+  const angles = [0, 0.35, -0.35, 0.7, -0.7, Math.PI].map(a=>baseAngle + a);
+
+  let best = null, bestScore = -Infinity;
+
+  for(const ang of angles){
+    let nx = cx + Math.cos(ang) * run - w/2;
+    let ny = cy + Math.sin(ang) * run - h/2;
+
+    // clamp e “encolhe” mais um pouquinho pra longe das bordas
+    let p = clampToArea(nx, ny);
+    p.x = Math.max(margin + edgeSafe, Math.min((a.width - w) - (margin + edgeSafe), p.x));
+    p.y = Math.max(margin + edgeSafe, Math.min((a.height - h) - (margin + edgeSafe), p.y));
+
+    const pcx = p.x + w/2, pcy = p.y + h/2;
+    const distP = Math.hypot(pcx - mx, pcy - my);
+
+    const minEdge = Math.min(
+      p.x - margin,
+      p.y - margin,
+      (a.width - (p.x + w)) - margin,
+      (a.height - (p.y + h)) - margin
+    );
+
+    // score: prioriza ficar longe do dedo e com boa folga de borda
+    const score = distP + (minEdge * 2.0);
+    if(score > bestScore){
+      bestScore = score;
+      best = p;
+    }
+  }
+
+  // se ainda ficou ruim (muito perto do dedo ou da borda), teleporta
+  const bcx = (best.x + w/2), bcy = (best.y + h/2);
+  const stillClose = Math.hypot(bcx - mx, bcy - my) < minPointerGap;
+  const edgeTooClose = Math.min(
+    best.x - margin,
+    best.y - margin,
+    (a.width - (best.x + w)) - margin,
+    (a.height - (best.y + h)) - margin
+  ) < edgeSafe;
+
+  if(stillClose || edgeTooClose){
+    // se o dedo estiver numa quina, joga pro lado oposto
+    const nearLeft   = mx < triggerEdge, nearRight = (a.width - mx) < triggerEdge;
+    const nearTop    = my < triggerEdge, nearBot   = (a.height - my) < triggerEdge;
+    if((nearLeft || nearRight) && (nearTop || nearBot)){
+      const x = nearLeft ? (a.width - w - margin - edgeSafe) : (margin + edgeSafe);
+      const y = nearTop  ? (a.height - h - margin - edgeSafe) : (margin + edgeSafe);
+      return {x, y};
+    }
+    return randomSafePos(mx, my);
+  }
+
+  return best;
+}
+
+function maybeFlee(clientX, clientY){
+  const a = area.getBoundingClientRect();
+  const mx = clientX - a.left;
+  const my = clientY - a.top;
+  const rect = getBtnRectRel();
+  if (edgeDistance(mx, my, rect) < triggerEdge){
+    const target = bestEscape(mx, my);
+    btnFuja.style.left = target.x + 'px';
+    btnFuja.style.top  = target.y + 'px';
+  }
+}
+
+// Eventos: aproximação por mouse/touch
+area.addEventListener('mousemove',  (e)=> { maybeFlee(e.clientX, e.clientY); }, {passive:true});
+area.addEventListener('pointermove',(e)=> { maybeFlee(e.clientX, e.clientY); }, {passive:true});
+area.addEventListener('pointerdown',(e)=> { maybeFlee(e.clientX, e.clientY); }, {passive:true});
+
+// Se conseguir entrar no botão, teleporta antes do clique
+btnFuja.addEventListener('pointerover', (e)=>{
+  const r = btnFuja.getBoundingClientRect();
+  const a = area.getBoundingClientRect();
+  const target = bestEscape(r.left - a.left + r.width/2, r.top - a.top + r.height/2);
+  btnFuja.style.left = target.x + 'px';
+  btnFuja.style.top  = target.y + 'px';
+});
+
+// Bloqueia clique/enter/space e foge de novo
+['click','pointerdown','mousedown','touchstart','keydown'].forEach(evt=>{
+  btnFuja.addEventListener(evt, (e)=>{
+    if (evt === 'keydown' && !['Enter',' '].includes(e.key)) return;
+    e.preventDefault();
+    const r = btnFuja.getBoundingClientRect();
+    const a = area.getBoundingClientRect();
+    const target = bestEscape(r.left - a.left + r.width/2, r.top - a.top + r.height/2);
+    btnFuja.style.left = target.x + 'px';
+    btnFuja.style.top  = target.y + 'px';
+  });
+});
+
+// Inicializa
+window.addEventListener('load', centerButton);
+window.addEventListener('resize', centerButton);
+
+
+})();
+</script>
+</body>
+</html>
